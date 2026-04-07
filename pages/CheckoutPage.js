@@ -24,7 +24,13 @@ export class CheckoutPage extends BasePage {
         this.finishButton = this.getByRole('button', { name: 'Finish' });
 
         this.successMessage = this.getByText('Thank you for your order!');
+
+        this.totalItemPriceCalculated;
+        this.totalTaxonTotalItemPriceCalculated;
+        this.totalAmountCalculated;
     }
+
+
 
     async fillCheckoutDetailsAndContinueToPayment(firstName, lastName, zipOrPostalCode) {
         await this.fill(this.firstName, firstName);
@@ -37,18 +43,18 @@ export class CheckoutPage extends BasePage {
         const itemTotalPrice = (await this.inventoryItemPrice.allInnerTexts()).reduce((sum, price) => {
             return sum + parseFloat(price.replace('$', ''));
         }, 0);
-        return itemTotalPrice.toFixed(2);
+        return itemTotalPrice;
     }
 
     async calculateTaxOnTotalPrice() {
         const total = await this.calculateItemTotalPrice();
         const tax = (this.taxRate / 100) * total;
-        return tax.toFixed(2);
+        return tax;
     }
 
-    async calculateTotalAmount() {
-        const total = await this.calculateItemTotalPrice();
-        const tax = await this.calculateTaxOnTotalPrice();
-        return +(total + tax).toFixed(2); //+(value) --> Convert string → number
+    async calculateAllAmounts() {
+        this.totalItemPriceCalculated = await this.calculateItemTotalPrice();
+        this.totalTaxonTotalItemPriceCalculated = await this.calculateTaxOnTotalPrice();
+        this.totalAmountCalculated = +(this.totalItemPriceCalculated + this.totalTaxonTotalItemPriceCalculated).toFixed(2);
     }
 }
