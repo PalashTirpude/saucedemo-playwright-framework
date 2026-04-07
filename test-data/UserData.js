@@ -9,4 +9,9 @@ export class UserData {
             password: "secret_sauc"
         }
     };
+    static checkoutDetails = {
+        firstName: 'Tony',
+        lastName: 'Stark',
+        postalCode: '442001'
+    };
 }
