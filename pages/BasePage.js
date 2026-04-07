@@ -116,7 +116,7 @@ export class BasePage {
      * Uncheck a checkbox
      * @param {import('playwright/test').Locator} locator 
      */
-    async check(locator) {
+    async uncheck(locator) {
         await locator.uncheck();
     }
 
