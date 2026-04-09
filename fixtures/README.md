@@ -1,0 +1,63 @@
+/\*\*
+
+- Fixtures Documentation
+-
+- This directory contains Playwright test fixtures that provide reusable setup
+- and teardown logic, as well as custom utilities for tests.
+-
+- AVAILABLE FIXTURES:
+-
+- 1.  Page Objects (from pageFixtures.js):
+- - loginPage: LoginPage instance
+- - inventoryPage: InventoryPage instance
+- - cartPage: CartPage instance
+- - checkoutPage: CheckoutPage instance
+- - users: User test data (valid and invalid credentials)
+- - authenticatedUser: Pre-authenticated user session with login completed
+-
+- USAGE IN TESTS:
+-
+- import { test, expect } from '../fixtures/pageFixtures';
+-
+- test('Login with valid credentials', async ({ loginPage, page }) => {
+- await loginPage.navigate('/');
+- await loginPage.login('test_user', 'password');
+- expect(page.url()).toContain('inventory.html');
+- });
+-
+- test('Add item to cart', async ({ authenticatedUser, cartPage }) => {
+- // User is already logged in via authenticatedUser fixture
+- const { page } = authenticatedUser;
+- await cartPage.addItemToCart('product-id');
+- const cartCount = await cartPage.getCartItemCount();
+- expect(cartCount).toBe(1);
+- });
+-
+- test('Access user data', async ({ users }) => {
+- const validUser = users.validUserData.username;
+- expect(validUser).toBeTruthy();
+- });
+-
+- KEY CONCEPTS:
+-
+- - Fixtures are reusable setup/teardown logic
+- - Each fixture uses the 'use' callback to provide value(s) to tests
+- - Fixtures can depend on other fixtures
+- - Setup code runs before test, teardown runs after
+- - Multiple fixtures can be combined in a single test
+-
+- CREATING CUSTOM FIXTURES:
+-
+- export const test = base.extend({
+- myCustomFixture: async ({ page }, use) => {
+-     // Setup logic here
+-     const setup = doSomething();
+-
+-     // Provide the fixture value to tests
+-     await use(setup);
+-
+-     // Cleanup logic here
+-     await cleanup();
+- },
+- });
+  \*/

@@ -6,11 +6,14 @@
 
 **Framework Implementation:** Built on Playwright with JavaScript (ES6+), the framework employs the Page Object Model (POM) design pattern for clean architecture and maintainability. Features include cross-browser testing (Chromium, Firefox, WebKit), environment-based configuration, Allure reporting, and seamless GitHub Actions CI/CD integration for automated test execution and reporting.
 
+> **✨ Latest Enhancement:** All tests (LoginTest, InventoryTest, CartTest) have been refactored to use Playwright fixtures, eliminating boilerplate code and improving test maintainability.
+
 ## Key Features
 
 | Feature                     | Description                                              | Status |
 | --------------------------- | -------------------------------------------------------- | ------ |
 | Page Object Model (POM)     | Modular page classes with BasePage for reusable methods  | ✅     |
+| Playwright Fixtures         | Reusable setup/teardown and page object fixtures         | ✅     |
 | Cross-browser Testing       | Chromium, Firefox, and WebKit support                    | ✅     |
 | Allure Reporting            | Automated report generation with visual analytics        | ✅     |
 | Playwright HTML Reports     | Built-in detailed test execution reports                 | ✅     |
@@ -39,6 +42,10 @@
 │       └── 📄 playwright.yml
 ├── 📂 configs/
 │   └── 📄 qa.env
+├── 📂 fixtures/
+│   ├── 📄 pageFixtures.js
+│   ├── 📄 README.md
+│   └── 📄 exampleTests.spec.js
 ├── 📂 pages/
 │   ├── 📄 BasePage.js
 │   ├── 📄 LoginPage.js
@@ -86,6 +93,270 @@ Run tests with a specific environment:
 ```bash
 TEST_ENV=staging npx playwright test
 ```
+
+## Fixtures & Reusable Components
+
+### What are Fixtures?
+
+Fixtures are reusable setup and teardown logic in Playwright that provide values (like page objects, data, or authenticated sessions) to tests. They eliminate boilerplate code and make tests cleaner and more maintainable.
+
+### ✅ Migration Status: COMPLETE
+
+All test files in the `tests/` directory have been refactored to use fixtures:
+
+- ✅ **LoginTest.spec.js** – Uses `loginPage` and `users` fixtures for authentication tests
+- ✅ **InventoryTest.spec.js** – Uses `authenticatedUser` and `inventoryPage` fixtures to skip login step
+- ✅ **CartTest.spec.js** – Uses all fixtures (`authenticatedUser`, `inventoryPage`, `cartPage`, `checkoutPage`, `users`) for end-to-end workflow
+
+#### Benefits of Migration:
+
+1. **Reduced Boilerplate** – No manual page object instantiation in every test
+2. **Cleaner Tests** – Focus on test logic, not setup code
+3. **Faster Execution** – Shared setup logic where applicable
+4. **Reusability** – Pre-authenticated fixture skips redundant login steps
+5. **Maintainability** – Page object changes only impact fixture definition
+
+#### Real-World Examples from Tests
+
+**LoginTest.spec.js - Before & After:**
+
+Before:
+
+```javascript
+import { test, expect } from "@playwright/test";
+import { LoginPage } from "../pages/LoginPage";
+import { UserData } from "../test-data/UserData";
+
+test("Valid credentials Login Test", async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.navigate("/");
+  await loginPage.login(
+    UserData.userData.validUserData.username,
+    UserData.userData.validUserData.password,
+  );
+  expect(page.url()).toBe("https://www.saucedemo.com/inventory.html");
+});
+```
+
+After (with fixtures):
+
+```javascript
+import { test, expect } from "../fixtures/pageFixtures";
+
+test("Valid credentials Login Test", async ({ loginPage, users, page }) => {
+  await loginPage.navigate("/");
+  await loginPage.login(
+    users.validUserData.username,
+    users.validUserData.password,
+  );
+  expect(page.url()).toContain("inventory.html");
+});
+```
+
+**InventoryTest.spec.js - Using Pre-authenticated Fixture:**
+
+Before:
+
+```javascript
+test("Products Add To Cart Test", async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const inventoryPage = new InventoryPage(page);
+
+  // Manual login required
+  await loginPage.navigate("/");
+  await loginPage.login(
+    UserData.userData.validUserData.username,
+    UserData.userData.validUserData.password,
+  );
+
+  // Then add products...
+  for (const product of productList) {
+    await inventoryPage.addProductToCart(product);
+  }
+});
+```
+
+After (authenticatedUser fixture skips login):
+
+```javascript
+test("Products Add To Cart Test", async ({
+  authenticatedUser,
+  inventoryPage,
+  page,
+}) => {
+  // User is already logged in via authenticatedUser fixture
+  expect(page.url()).toContain("inventory.html");
+
+  // Directly add products
+  for (const product of productList) {
+    await inventoryPage.addProductToCart(product);
+  }
+});
+```
+
+**CartTest.spec.js - End-to-End with Multiple Fixtures:**
+
+Now uses six fixtures for complete coverage:
+
+- `authenticatedUser` – Skip login, user ready at inventory
+- `inventoryPage` – Product browsing
+- `cartPage` – Cart operations
+- `checkoutPage` – Checkout flow
+- `users` – Test data access
+- `page` – Raw Playwright page object
+
+### Available Fixtures
+
+The framework provides several built-in fixtures in `fixtures/pageFixtures.js`:
+
+| Fixture Name        | Type          | Used In Tests                           | Description                                                 |
+| ------------------- | ------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `loginPage`         | LoginPage     | LoginTest.spec.js                       | Login page object for authentication tests                  |
+| `inventoryPage`     | InventoryPage | InventoryTest.spec.js, CartTest.spec.js | Inventory page object for product browsing tests            |
+| `cartPage`          | CartPage      | CartTest.spec.js                        | Cart page object for shopping cart tests                    |
+| `checkoutPage`      | CheckoutPage  | CartTest.spec.js                        | Checkout page object for order completion tests             |
+| `users`             | Object        | LoginTest.spec.js, CartTest.spec.js     | User test data (valid and invalid credentials)              |
+| `authenticatedUser` | Object        | InventoryTest.spec.js, CartTest.spec.js | Pre-authenticated user session with login already completed |
+
+### Using Fixtures in Tests
+
+Instead of manually instantiating page objects, use fixtures:
+
+**Before (without fixtures):**
+
+```javascript
+import { test, expect } from "@playwright/test";
+import { LoginPage } from "../pages/LoginPage";
+
+test("Login test", async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.navigate("/");
+  await loginPage.login("user", "pass");
+});
+```
+
+**After (with fixtures):**
+
+```javascript
+import { test, expect } from "../fixtures/pageFixtures";
+
+test("Login test", async ({ loginPage, page }) => {
+  await loginPage.navigate("/");
+  await loginPage.login("user", "pass");
+  expect(page.url()).toContain("inventory.html");
+});
+```
+
+### Pre-authenticated User Fixture
+
+For tests that require a logged-in user, use the `authenticatedUser` fixture:
+
+```javascript
+import { test, expect } from "../fixtures/pageFixtures";
+
+test("Browse products as logged-in user", async ({
+  authenticatedUser,
+  page,
+}) => {
+  // User is already logged in via the fixture
+  const { loginPage } = authenticatedUser;
+
+  expect(page.url()).toContain("inventory.html");
+  await loginPage.logout();
+});
+```
+
+### User Data Fixture
+
+Access test data through the `users` fixture:
+
+```javascript
+import { test, expect } from "../fixtures/pageFixtures";
+
+test("Login with dynamic user data", async ({ loginPage, users }) => {
+  await loginPage.navigate("/");
+  await loginPage.login(
+    users.validUserData.username,
+    users.validUserData.password,
+  );
+  expect(page.url()).toContain("inventory.html");
+});
+```
+
+### Combining Multiple Fixtures
+
+Fixtures can be combined in a single test:
+
+```javascript
+test("Complete purchase flow", async ({
+  authenticatedUser,
+  cartPage,
+  checkoutPage,
+  page,
+}) => {
+  // authenticatedUser fixture logs in the user
+  const { loginPage } = authenticatedUser;
+
+  // Use other fixtures for cart and checkout
+  await cartPage.addItemToCart("product-123");
+  await checkoutPage.completeCheckout();
+
+  expect(page.url()).toContain("thank-you");
+});
+```
+
+### Creating Custom Fixtures
+
+Add custom fixtures to `fixtures/pageFixtures.js`:
+
+```javascript
+export const test = base.extend({
+  apiClient: async ({}, use) => {
+    // Setup: Initialize API client
+    const client = new APIClient();
+    await client.authenticate();
+
+    // Provide fixture to tests
+    await use(client);
+
+    // Teardown: Clean up
+    await client.logout();
+  },
+});
+```
+
+### Fixture Examples
+
+See `fixtures/exampleTests.spec.js` for complete working examples of fixture usage.
+
+### Running Tests with Fixtures
+
+All tests in the `tests/` directory now use fixtures. Run them using standard Playwright commands:
+
+```bash
+# Run all tests with fixtures
+npx playwright test
+
+# Run specific test file
+npx playwright test tests/LoginTest.spec.js
+
+# Run tests in headed mode (see browser)
+npx playwright test --headed
+
+# Run tests in debug mode
+npx playwright test --debug
+
+# Run tests matching a pattern
+npx playwright test -g "Login"
+
+# Run with specific browser
+npx playwright test --project=chromium
+
+# Run with environment variable
+TEST_ENV=staging npx playwright test
+```
+
+**Note:** No changes to how tests are executed – fixtures work seamlessly with all Playwright commands.
 
 ## CI/CD Integration
 
@@ -177,9 +448,12 @@ All require similar steps: checkout → install dependencies → install browser
 ## Best Practices Implemented
 
 - **Page Object Model** – Each page has its own class
-- **DRY Principle** – Common methods in BasePage
-- **Consistent Naming** – Clear, descriptive method names
+- **Playwright Fixtures** – Reusable setup/teardown and page object fixtures reduce boilerplate
+- **DRY Principle** – Common methods in BasePage and reusable fixtures
+- **Consistent Naming** – Clear, descriptive method and fixture names
 - **Async/Await** – Proper handling of asynchronous operations
-- **Error Handling** – Meaningful error messages
-- **Externalized Data** – Test data separated from test logic
-- **Environment Configuration** – No hardcoded URLs/credentials
+- **Error Handling** – Meaningful error messages and assertions
+- **Externalized Data** – Test data separated from test logic via UserData.js
+- **Environment Configuration** – No hardcoded URLs/credentials, uses .env files
+- **Test Isolation** – Pre-authenticated user fixture for independent test scenarios
+- **Composable Fixtures** – Combine multiple fixtures for complex test setups

@@ -1,34 +1,20 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pages/LoginPage';
-import { InventoryPage } from '../pages/InventoryPage';
-import { UserData } from '../test-data/UserData';
+import { test, expect } from '../fixtures/pageFixtures';
 
-test('Products Add To Cart Test', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.navigate('/');
-    await loginPage.login(UserData.userData.validUserData.username, UserData.userData.validUserData.password);
-    expect(page.url()).toBe('https://www.saucedemo.com/inventory.html');
+test('Products Add To Cart Test', async ({ authenticatedUser, inventoryPage, page }) => {
+    // User is already logged in via authenticatedUser fixture
+    expect(page.url()).toContain('inventory.html');
 
-    const inventoryPage = new InventoryPage(page);
-    const productListNeedsToBeAddedInCart = ["Sauce Labs Backpack", "Sauce Labs Fleece Jacket", "Sauce Labs Onesie"];
+    const productListNeedsToBeAddedInCart = [
+        'Sauce Labs Backpack',
+        'Sauce Labs Fleece Jacket',
+        'Sauce Labs Onesie',
+    ];
 
-    /*
-    productListNeedsToBeAddedInCart.forEach(product => {
-     inventoryPage.addProductToCart(product);
-    });
-
-    -----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    Problem:
-
-    forEach does NOT support await
-    Your async calls run in parallel & not awaited ❌
-
-    */
-
+    // Add products to cart sequentially (forEach does not support await)
     for (const product of productListNeedsToBeAddedInCart) {
         await inventoryPage.addProductToCart(product);
     }
+
     await inventoryPage.shoppingCartLink.click();
-    console.log(productListNeedsToBeAddedInCart);
+    console.log('Added products:', productListNeedsToBeAddedInCart);
 });
