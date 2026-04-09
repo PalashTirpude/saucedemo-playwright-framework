@@ -2,20 +2,24 @@
 
 ## Project Overview
 
-This is a comprehensive end-to-end test automation framework for SauceDemo (https://www.saucedemo.com) built using Playwright. The framework implements the Page Object Model (POM) design pattern, providing maintainable, reusable, and scalable test automation for the SauceDemo e-commerce platform.
+**Functional Testing:** Comprehensive end-to-end test automation for SauceDemo (https://www.saucedemo.com), a sample e-commerce platform. Covers core user workflows including user authentication, product inventory browsing, shopping cart management, and checkout processes.
+
+**Framework Implementation:** Built on Playwright with JavaScript (ES6+), the framework employs the Page Object Model (POM) design pattern for clean architecture and maintainability. Features include cross-browser testing (Chromium, Firefox, WebKit), environment-based configuration, Allure reporting, and seamless GitHub Actions CI/CD integration for automated test execution and reporting.
 
 ## Key Features
 
-| Feature                   | Description                                       | Status |
-| ------------------------- | ------------------------------------------------- | ------ |
-| Page Object Model         | Clean separation of test logic from page elements | ✅     |
-| Cross-browser Testing     | Chromium, Firefox, and WebKit support             | ✅     |
-| Parallel Execution        | Configurable parallel test execution              | ✅     |
-| Allure Reporting          | Beautiful and informative test reports            | ✅     |
-| Environment Configuration | Dynamic environment management using .env files   | ✅     |
-| Screenshot Capture        | Built-in screenshot functionality for debugging   | ✅     |
-| Data-driven Testing       | Externalized test data management                 | ✅     |
-| CI/CD Integration         | Ready for Jenkins, GitHub Actions, GitLab CI      | ✅     |
+| Feature                     | Description                                              | Status |
+| --------------------------- | -------------------------------------------------------- | ------ |
+| Page Object Model (POM)     | Modular page classes with BasePage for reusable methods  | ✅     |
+| Cross-browser Testing       | Chromium, Firefox, and WebKit support                    | ✅     |
+| Allure Reporting            | Automated report generation with visual analytics        | ✅     |
+| Playwright HTML Reports     | Built-in detailed test execution reports                 | ✅     |
+| Environment Configuration   | Multi-environment .env files (QA, Staging, Production)   | ✅     |
+| Screenshot Capture          | Automatic screenshots on test failure                    | ✅     |
+| Data-driven Testing         | Externalized test data management (UserData.js)          | ✅     |
+| Manual & Automated Triggers | GitHub Actions workflow_dispatch + CI/CD support         | ✅     |
+| Configuration Management    | Centralized Playwright config with environment variables | ✅     |
+| Error Handling & Logging    | Meaningful error messages and test execution logs        | ✅     |
 
 ## Tech Stack
 
@@ -29,7 +33,10 @@ This is a comprehensive end-to-end test automation framework for SauceDemo (http
 ## Project Structure
 
 ```text
-📦 sauce-demo-automation/
+📦 saucedemo-automation/
+├── 📂 .github/
+│   └── 📂 workflows/
+│       └── 📄 playwright.yml
 ├── 📂 configs/
 │   └── 📄 qa.env
 ├── 📂 pages/
@@ -88,22 +95,26 @@ The framework includes a fully configured GitHub Actions workflow (`.github/work
 
 #### Workflow Configuration
 
-| Property           | Value                        | Description                              |
-| ------------------ | ---------------------------- | ---------------------------------------- |
-| **Trigger Events** | Manual (`workflow_dispatch`) | Triggered manually via GitHub Actions UI |
-| **Runner**         | `ubuntu-latest`              | Runs on Ubuntu Linux environment         |
-| **Node Version**   | 22                           | Latest Node.js LTS version               |
-| **Browsers**       | Chromium, Firefox, Webkit    | Full cross-browser testing               |
-| **Report Upload**  | GitHub Artifacts             | Test reports stored for 90 days          |
+| Property            | Value                        | Description                                    |
+| ------------------- | ---------------------------- | ---------------------------------------------- |
+| **Trigger Events**  | Manual (`workflow_dispatch`) | Triggered manually via GitHub Actions UI       |
+| **Runner**          | `ubuntu-latest`              | Runs on Ubuntu Linux environment               |
+| **Node Version**    | 24                           | Latest Node.js LTS version                     |
+| **Package Manager** | `npm ci`                     | Clean, reproducible dependency installation    |
+| **Browsers**        | Chromium, Firefox, Webkit    | Full cross-browser testing support             |
+| **Reports**         | Playwright + Allure          | Dual reporting for comprehensive test insights |
+| **Artifact Upload** | GitHub Artifacts             | Reports stored for 90 days retention           |
 
 #### Workflow Steps
 
-1. **Checkout Code** – Retrieves the repository code
-2. **Setup Node.js** – Installs Node.js v22
-3. **Install Dependencies** – Runs `npm install` for all packages
-4. **Install Playwright Browsers** – Downloads all required browsers with system dependencies
-5. **Run Tests** – Executes all Playwright tests with configured settings
-6. **Upload Report** – Stores `playwright-report/` as a downloadable artifact
+1. **Checkout Code** – Retrieves the repository code using actions/checkout@v4
+2. **Setup Node.js** – Installs Node.js v24 with actions/setup-node@v4
+3. **Install Dependencies** – Runs `npm ci` for clean, reproducible package installation
+4. **Install Playwright Browsers** – Downloads all required browsers (Chromium, Firefox, WebKit) with system dependencies
+5. **Run Tests** – Executes all Playwright tests with configured retries and timeouts
+6. **Install Allure CLI** – Installs allure-commandline globally for report generation
+7. **Generate Allure Report** – Creates beautiful Allure HTML report from test results
+8. **Upload Reports** – Stores both `playwright-report/` and Allure report as downloadable artifacts
 
 #### Triggering Tests Manually
 
@@ -144,9 +155,11 @@ To modify the workflow:
       branches: [main]
     pull_request:
   ```
-- **Change Node version:** Modify `node-version: 22` to any desired version
-- **Add environment variables:** Use GitHub Secrets for sensitive data
-- **Add notifications:** Integrate Slack, email, or other services
+- **Change Node version:** Modify `node-version: 24` to any desired version
+- **Modify package installation:** Replace `npm ci` with `npm install` if you want to update dependencies
+- **Add environment variables:** Use GitHub Secrets for sensitive data like database credentials
+- **Configure Allure uploads:** Enable Allure Report Portal integration for long-term trend analysis
+- **Add notifications:** Integrate Slack, email, or Microsoft Teams for test result alerts
 - **Run specific tests:** Change `npx playwright test` to `npx playwright test tests/LoginTest.spec.js`
 - **Add workflow inputs:** Allow selecting test suite or environment when manually triggering
 
