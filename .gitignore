@@ -6,6 +6,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
-
+/allure-report
+/allure-results
 .env
 .DS_Store
