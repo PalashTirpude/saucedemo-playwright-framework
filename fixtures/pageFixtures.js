@@ -3,7 +3,6 @@ import { LoginPage } from '../pages/LoginPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { CartPage } from '../pages/CartPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
-import { UserData } from '../test-data/UserData';
 
 /**
  * Page Object Fixtures
@@ -53,10 +52,31 @@ export const test = base.extend({
 
     /**
      * User data fixture
-     * Provides valid and invalid user credentials
+     * Provides valid and invalid user credentials from environment variables
      */
     users: async ({ }, use) => {
-        await use(UserData);
+        const validUserData = {
+            username: process.env.VALID_USERNAME,
+            password: process.env.VALID_PASSWORD
+        };
+        const invalidUserData = {
+            username: process.env.INVALID_USERNAME,
+            password: process.env.INVALID_PASSWORD
+        };
+        const userData = {
+            userData: {
+                validUserData,
+                invalidUserData
+            },
+            validUserData,
+            invalidUserData,
+            checkoutDetails: {
+                firstName: 'Tony',
+                lastName: 'Stark',
+                postalCode: '442001'
+            }
+        };
+        await use(userData);
     },
 
 
@@ -68,8 +88,8 @@ export const test = base.extend({
     authenticatedUser: async ({ page, loginPage }, use) => {
         await loginPage.navigate('/');
         await loginPage.login(
-            UserData.userData.validUserData.username,
-            UserData.userData.validUserData.password
+            process.env.VALID_USERNAME,
+            process.env.VALID_PASSWORD
         );
         await use({ page, loginPage });
     },

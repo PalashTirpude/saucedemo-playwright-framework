@@ -27,6 +27,12 @@ jobs:
 
       - name: Run Tests
         run: npx playwright test
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          VALID_USERNAME: ${{ secrets.VALID_USERNAME }}
+          VALID_PASSWORD: ${{ secrets.VALID_PASSWORD }}
+          INVALID_USERNAME: ${{ secrets.INVALID_USERNAME }}
+          INVALID_PASSWORD: ${{ secrets.INVALID_PASSWORD }}
 
       - name: Install Allure CLI
         run: npm install -g allure-commandline --save-dev

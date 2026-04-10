@@ -82,17 +82,84 @@
 
 ## Environment Configuration
 
+### Secure Credential Management
+
+All sensitive data (URLs, usernames, passwords) are securely managed using environment variables loaded from `.env` files in the `configs/` directory. This approach ensures credentials are never hardcoded in the codebase.
+
+#### Local Development
+
 Create environment-specific `.env` files in the `configs/` directory:
 
 - `qa.env` – QA environment
 - `staging.env` – Staging environment
 - `production.env` – Production environment
 
+**Example qa.env:**
+
+```env
+BASE_URL=https://www.saucedemo.com
+VALID_USERNAME=standard_user
+VALID_PASSWORD=secret_sauce
+INVALID_USERNAME=standard_user
+INVALID_PASSWORD=secret_sauc
+```
+
 Run tests with a specific environment:
 
 ```bash
+TEST_ENV=qa npx playwright test
 TEST_ENV=staging npx playwright test
 ```
+
+#### CI/CD Pipeline (GitHub Actions)
+
+In the CI/CD workflow (`.github/workflows/playwright.yml`), sensitive data is injected from **GitHub Secrets** instead of being hardcoded:
+
+```yaml
+- name: Run Tests
+  run: npx playwright test
+  env:
+    BASE_URL: ${{ secrets.BASE_URL }}
+    VALID_USERNAME: ${{ secrets.VALID_USERNAME }}
+    VALID_PASSWORD: ${{ secrets.VALID_PASSWORD }}
+    INVALID_USERNAME: ${{ secrets.INVALID_USERNAME }}
+    INVALID_PASSWORD: ${{ secrets.INVALID_PASSWORD }}
+```
+
+### Setting Up GitHub Secrets
+
+To configure secrets in your GitHub repository:
+
+1. Navigate to **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret** for each secret:
+
+| Secret Name        | Value                       | Purpose               |
+| ------------------ | --------------------------- | --------------------- |
+| `BASE_URL`         | `https://www.saucedemo.com` | Base URL for tests    |
+| `VALID_USERNAME`   | `standard_user`             | Valid login username  |
+| `VALID_PASSWORD`   | `secret_sauce`              | Valid login password  |
+| `INVALID_USERNAME` | `standard_user`             | Invalid test username |
+| `INVALID_PASSWORD` | `secret_sauc`               | Invalid test password |
+
+3. Save each secret
+4. The workflow will automatically inject these values as environment variables during test execution
+
+### Security Best Practices
+
+✅ **Do's:**
+
+- Store sensitive data in GitHub Secrets for CI/CD
+- Use `.env` files locally for development (never commit to git)
+- Keep `.env` files in `.gitignore`
+- Rotate credentials regularly
+- Use different credentials for different environments
+
+❌ **Don'ts:**
+
+- Never hardcode credentials in test files
+- Never commit `.env` files to the repository
+- Never log credentials in test output or reports
+- Never share secrets in pull requests or documentation
 
 ## Fixtures & Reusable Components
 
@@ -383,6 +450,8 @@ The framework includes a fully configured GitHub Actions workflow (`.github/work
 3. **Install Dependencies** – Runs `npm ci` for clean, reproducible package installation
 4. **Install Playwright Browsers** – Downloads all required browsers (Chromium, Firefox, WebKit) with system dependencies
 5. **Run Tests** – Executes all Playwright tests with configured retries and timeouts
+   - **Environment variables injected from GitHub Secrets** for secure credential management
+   - Credentials are never exposed in logs or workflow files
 6. **Install Allure CLI** – Installs allure-commandline globally for report generation
 7. **Generate Allure Report** – Creates beautiful Allure HTML report from test results
 8. **Upload Reports** – Stores both `playwright-report/` and Allure report as downloadable artifacts
@@ -418,6 +487,7 @@ To modify the workflow:
 
 **Useful customizations:**
 
+- **Manage secrets securely:** Store sensitive data in GitHub Secrets (Settings → Secrets and variables → Actions) rather than hardcoding values
 - **Enable automatic triggers:** Uncomment `push:` and `pull_request:` sections to run on code changes
   ```yaml
   on:
@@ -428,7 +498,6 @@ To modify the workflow:
   ```
 - **Change Node version:** Modify `node-version: 24` to any desired version
 - **Modify package installation:** Replace `npm ci` with `npm install` if you want to update dependencies
-- **Add environment variables:** Use GitHub Secrets for sensitive data like database credentials
 - **Configure Allure uploads:** Enable Allure Report Portal integration for long-term trend analysis
 - **Add notifications:** Integrate Slack, email, or Microsoft Teams for test result alerts
 - **Run specific tests:** Change `npx playwright test` to `npx playwright test tests/LoginTest.spec.js`
@@ -453,7 +522,8 @@ All require similar steps: checkout → install dependencies → install browser
 - **Consistent Naming** – Clear, descriptive method and fixture names
 - **Async/Await** – Proper handling of asynchronous operations
 - **Error Handling** – Meaningful error messages and assertions
-- **Externalized Data** – Test data separated from test logic via UserData.js
-- **Environment Configuration** – No hardcoded URLs/credentials, uses .env files
+- **Externalized Data** – Test data separated from test logic
+- **Environment Configuration** – No hardcoded URLs/credentials, uses environment variables from `.env` files
+- **Secure Credentials** – Sensitive data fetched from GitHub Secrets in CI/CD, never exposed in code or logs
 - **Test Isolation** – Pre-authenticated user fixture for independent test scenarios
 - **Composable Fixtures** – Combine multiple fixtures for complex test setups
