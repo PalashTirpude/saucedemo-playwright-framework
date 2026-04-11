@@ -33,7 +33,12 @@ export default defineConfig({
 
     baseURL: process.env.BASE_URL,
     testIdAttribute: 'data-test',
-    trace: 'on-first-retry',
+    trace: 'on',
+    actionTimeout: 0,
+    ignoreHTTPSErrors: true,
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    headless: true
   },
 
 
